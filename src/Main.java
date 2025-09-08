@@ -15,7 +15,7 @@ public class Main {
         // Create the main window (JFrame)
         JFrame frame = new JFrame("Advent of code solver");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 400);
+        frame.setSize(800, 800);
         frame.setLayout(new BorderLayout(10, 10));
 
         JPanel controlsPanel = new JPanel();
@@ -33,6 +33,7 @@ public class Main {
         JComboBox<String> selectAdventOfCodeDay = new JComboBox<>(actions);
 
         JButton solveButton = new JButton("Solve");
+        JButton clearTerminalButton = new JButton("Clear terminal");
 
         // Add components to the controls panel
         controlsPanel.add(adventOfCodeYearLabel);
@@ -40,6 +41,7 @@ public class Main {
         controlsPanel.add(adventOfCodeDayLabel);
         controlsPanel.add(selectAdventOfCodeDay);
         controlsPanel.add(solveButton);
+        controlsPanel.add(clearTerminalButton);
 
         // JTextArea will display our output
         terminalTextArea = new JTextArea();
@@ -52,6 +54,19 @@ public class Main {
 
         solveButton.addActionListener(e -> {
             logToTerminal("Solving...");
+
+            Solution solution = new Solution(
+                selectAdventOfCodeYear.getSelectedItem().toString(),
+                selectAdventOfCodeDay.getSelectedItem().toString(),
+                this::logToTerminal
+            );
+
+            solution.solve();
+        });
+
+        clearTerminalButton.addActionListener(e ->  {
+            terminalTextArea.setText("");
+            logToTerminal("Terminal cleared. Please select a system and an action.");
         });
 
         frame.add(controlsPanel, BorderLayout.NORTH);
@@ -66,6 +81,7 @@ public class Main {
     /**
      * Appends a message to the terminal text area with a timestamp.
      * This method is thread-safe for calls from other threads if needed.
+     *
      * @param message The message to log.
      */
     private void logToTerminal(String message) {
@@ -80,10 +96,6 @@ public class Main {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(Main::new);
-
-//        Solvable solution = new Solution(args[0], args[2]);
-
-//        solution.solve();
     }
 
 }
