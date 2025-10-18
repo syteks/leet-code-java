@@ -10,16 +10,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Solution extends BaseSolution {
-    private final Consumer<String> logToTerminal;
-
     /**
      * The solution is constructed with a log to terminal method, that logs every solution and operation done by each advent code year and day.
+     *
      * @param logToTerminal - This will log into our Java Swing terminal.
      */
     public Solution(Consumer<String> logToTerminal) {
-        this.logToTerminal = logToTerminal;
+        super(logToTerminal);
     }
 
+    @Override
     public void solvePart1()
     {
         long startTime = System.nanoTime();
@@ -63,6 +63,7 @@ public class Solution extends BaseSolution {
         }
     }
 
+    @Override
     public void solvePart2()
     {
         long startTime = System.nanoTime();

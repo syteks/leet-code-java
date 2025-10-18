@@ -8,19 +8,18 @@ import java.util.HashMap;
 import java.util.function.Consumer;
 
 public class Solution extends BaseSolution {
-    private final Consumer<String> logToTerminal;
-
     record Point(int x, int y) {}
 
     /**
      * The solution is constructed with a log to terminal method, that logs every solution and operation done by each advent code year and day.
+     *
      * @param logToTerminal - This will log into our Java Swing terminal.
      */
     public Solution(Consumer<String> logToTerminal) {
-        this.logToTerminal = logToTerminal;
+        super(logToTerminal);
     }
 
-
+    @Override
     public void solvePart1() {
         long startTime = System.nanoTime();
         // This HasMap will create a list of <x, [y]>, so for example for each x, what are the y positions visited.
@@ -63,6 +62,7 @@ public class Solution extends BaseSolution {
         logToTerminal.accept(String.format("The solution for year 2015, day 3 PART 1 took %s ms to execute", durationInMillis));
     }
 
+    @Override
     public void solvePart2() {
         long startTime = System.nanoTime();
 

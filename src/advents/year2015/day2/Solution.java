@@ -10,14 +10,13 @@ import java.nio.file.Paths;
 import java.util.function.Consumer;
 
 public class Solution extends BaseSolution {
-    private final Consumer<String> logToTerminal;
-
     /**
      * The solution is constructed with a log to terminal method, that logs every solution and operation done by each advent code year and day.
+     *
      * @param logToTerminal - This will log into our Java Swing terminal.
      */
     public Solution(Consumer<String> logToTerminal) {
-        this.logToTerminal = logToTerminal;
+        super(logToTerminal);
     }
 
     @Override
