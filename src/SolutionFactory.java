@@ -4,7 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Consumer;
 
-public class Solution implements Solvable {
+public class SolutionFactory implements Solvable {
     /**
      * This property will hold the solution for the given year and day
      */
@@ -20,7 +20,7 @@ public class Solution implements Solvable {
      * @param year - The advent of code year to solve.
      * @param day - The advent of code day to solve.
      */
-    public Solution(String year, String day, Consumer<String> logToTerminal) {
+    public SolutionFactory(String year, String day, Consumer<String> logToTerminal) {
         String className = "advents.year" + year + ".day" + day + ".Solution";
         this.logToTerminal = logToTerminal;
 

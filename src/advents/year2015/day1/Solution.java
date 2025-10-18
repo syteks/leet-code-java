@@ -1,6 +1,6 @@
 package advents.year2015.day1;
 
-import advents.interfaces.Solvable;
+import advents.utils.BaseSolution;
 import advents.utils.FileReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,7 +9,7 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Solution implements Solvable {
+public class Solution extends BaseSolution {
     private final Consumer<String> logToTerminal;
 
     /**
@@ -20,21 +20,11 @@ public class Solution implements Solvable {
         this.logToTerminal = logToTerminal;
     }
 
-    /**
-     * Solves the proble for the advent of code 2015 day 1.
-     * Not Quite Lisp
-     */
-    @Override
-    public void solve() {
-        this.solvePart1();
-        this.solvePart2();
-    }
-
-    private void solvePart1()
+    public void solvePart1()
     {
         long startTime = System.nanoTime();
 
-        Path filePath = Paths.get("src\\advents\\year2015\\day1\\input.txt");
+        Path filePath = Paths.get("src/advents/year2015/day1/input.txt");
         try {
             String fileReader = FileReader.readFileAsString(filePath);
             Pattern patternFloorUp = Pattern.compile("\\(");
@@ -73,11 +63,11 @@ public class Solution implements Solvable {
         }
     }
 
-    private void solvePart2()
+    public void solvePart2()
     {
         long startTime = System.nanoTime();
 
-        Path filePath = Paths.get("src\\advents\\year2015\\day1\\input.txt");
+        Path filePath = Paths.get("src/advents/year2015/day1/input.txt");
         try {
             java.io.FileReader fileReader = new java.io.FileReader(filePath.toString());
 

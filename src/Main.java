@@ -55,7 +55,7 @@ public class Main {
         solveButton.addActionListener(e -> {
             logToTerminal("Solving...");
 
-            Solution solution = new Solution(
+            SolutionFactory solution = new SolutionFactory(
                 selectAdventOfCodeYear.getSelectedItem().toString(),
                 selectAdventOfCodeDay.getSelectedItem().toString(),
                 this::logToTerminal

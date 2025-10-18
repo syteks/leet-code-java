@@ -1,6 +1,7 @@
 package advents.year2015.day2;
 
 import advents.interfaces.Solvable;
+import advents.utils.BaseSolution;
 
 import java.io.BufferedReader;
 import java.nio.file.Files;
@@ -8,7 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
 
-public class Solution implements Solvable {
+public class Solution extends BaseSolution {
     private final Consumer<String> logToTerminal;
 
     /**
@@ -25,10 +26,10 @@ public class Solution implements Solvable {
         this.solvePart2();
     }
 
-    private void solvePart1() {
+    public void solvePart1() {
         long startTime = System.nanoTime();
 
-        Path filePath = Paths.get("src\\advents\\year2015\\day2\\input.txt");
+        Path filePath = Paths.get("src/advents/year2015/day2/input.txt");
         try {
             final int[] amountOfPaper = {0};
 
@@ -70,10 +71,10 @@ public class Solution implements Solvable {
         }
     }
 
-    private void solvePart2() {
+    public void solvePart2() {
         long startTime = System.nanoTime();
 
-        Path filePath = Paths.get("src\\advents\\year2015\\day2\\input.txt");
+        Path filePath = Paths.get("src/advents/year2015/day2/input.txt");
         try {
             final int[] amountOfRibbon = {0};
 
