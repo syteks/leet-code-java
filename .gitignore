@@ -26,7 +26,6 @@ replay_pid*
 out*
 
 # Maven
-pom.xml
 target/
 
 # IntelliJ module files
