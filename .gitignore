@@ -24,3 +24,10 @@ hs_err_pid*
 replay_pid*
 .idea
 out*
+
+# Maven
+pom.xml
+target/
+
+# IntelliJ module files
+*.iml
