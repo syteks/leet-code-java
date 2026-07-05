@@ -1,101 +1,181 @@
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.TextColor;
+import com.googlecode.lanterna.gui2.BasicWindow;
+import com.googlecode.lanterna.gui2.Borders;
+import com.googlecode.lanterna.gui2.Button;
+import com.googlecode.lanterna.gui2.ComboBox;
+import com.googlecode.lanterna.gui2.Component;
+import com.googlecode.lanterna.gui2.DefaultWindowManager;
+import com.googlecode.lanterna.gui2.Direction;
+import com.googlecode.lanterna.gui2.EmptySpace;
+import com.googlecode.lanterna.gui2.Label;
+import com.googlecode.lanterna.gui2.LinearLayout;
+import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
+import com.googlecode.lanterna.gui2.Panel;
+import com.googlecode.lanterna.gui2.TextBox;
+import com.googlecode.lanterna.gui2.Window;
+import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
+import com.googlecode.lanterna.graphics.Theme;
+import com.googlecode.lanterna.graphics.SimpleTheme;
+import com.googlecode.lanterna.screen.Screen;
+import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
+/**
+ * Terminal (TUI) front-end for the Advent of Code solver, built with Lanterna.
+ * <p>
+ * The user picks a year and a day, presses Solve, and the matching solution is loaded
+ * via {@link SolutionFactory} (reflection) and executed. Output is streamed into an
+ * on-screen "terminal" box. Solutions stay UI-agnostic: they only ever receive a
+ * {@code Consumer<String>} sink, which here appends timestamped lines to the output box.
+ */
 public class Main {
-    // A JTextArea to act as our "terminal"
-    private final JTextArea terminalTextArea;
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+    // ── Catppuccin Mocha palette — a soft, Neovim-style dark theme ──────────────
+    private static final TextColor CRUST     = new TextColor.RGB(0x11, 0x11, 0x1b);
+    private static final TextColor MANTLE    = new TextColor.RGB(0x18, 0x18, 0x25);
+    private static final TextColor BASE       = new TextColor.RGB(0x1e, 0x1e, 0x2e);
+    private static final TextColor SURFACE0   = new TextColor.RGB(0x31, 0x32, 0x44);
+    private static final TextColor TEXT       = new TextColor.RGB(0xcd, 0xd6, 0xf4);
+    private static final TextColor OVERLAY0   = new TextColor.RGB(0x6c, 0x70, 0x86);
+    private static final TextColor BLUE       = new TextColor.RGB(0x89, 0xb4, 0xfa);
+
+    private final WindowBasedTextGUI gui;
+    private final BasicWindow window;
+    private final ComboBox<String> yearBox;
+    private final ComboBox<String> dayBox;
+    private final TextBox output;
 
     /**
-     * The default constructor to also initialize the Java Swing UI that will be used to resolve the advent of code.
-     */
-    public Main() {
-        // Create the main window (JFrame)
-        JFrame frame = new JFrame("Advent of code solver");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 800);
-        frame.setLayout(new BorderLayout(10, 10));
-
-        JPanel controlsPanel = new JPanel();
-        controlsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        controlsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // First select box (JComboBox)
-        JLabel adventOfCodeYearLabel = new JLabel("Advent of Code Year:");
-        String[] systems = {"2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"};
-        JComboBox<String> selectAdventOfCodeYear = new JComboBox<>(systems);
-
-        // Second select box (JComboBox)
-        JLabel adventOfCodeDayLabel = new JLabel("Advent of Code Day:");
-        String[] actions = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"};
-        JComboBox<String> selectAdventOfCodeDay = new JComboBox<>(actions);
-
-        JButton solveButton = new JButton("Solve");
-        JButton clearTerminalButton = new JButton("Clear terminal");
-
-        // Add components to the controls panel
-        controlsPanel.add(adventOfCodeYearLabel);
-        controlsPanel.add(selectAdventOfCodeYear);
-        controlsPanel.add(adventOfCodeDayLabel);
-        controlsPanel.add(selectAdventOfCodeDay);
-        controlsPanel.add(solveButton);
-        controlsPanel.add(clearTerminalButton);
-
-        // JTextArea will display our output
-        terminalTextArea = new JTextArea();
-        terminalTextArea.setEditable(false); // Make it read-only
-        terminalTextArea.setFont(new Font("Monospaced", Font.PLAIN, 14)); // Use a terminal-like font
-        terminalTextArea.setMargin(new Insets(10, 10, 10, 10)); // Add some padding
-
-        // Wrap the text area in a JScrollPane to get scrollbars
-        JScrollPane scrollPane = new JScrollPane(terminalTextArea);
-
-        solveButton.addActionListener(e -> {
-            logToTerminal("Solving...");
-
-            SolutionFactory solution = new SolutionFactory(
-                selectAdventOfCodeYear.getSelectedItem().toString(),
-                selectAdventOfCodeDay.getSelectedItem().toString(),
-                this::logToTerminal
-            );
-
-            solution.solve();
-        });
-
-        clearTerminalButton.addActionListener(e ->  {
-            terminalTextArea.setText("");
-            logToTerminal("Terminal cleared. Please select a system and an action.");
-        });
-
-        frame.add(controlsPanel, BorderLayout.NORTH);
-        frame.add(scrollPane, BorderLayout.CENTER);
-
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-
-        logToTerminal("Application started. Please select a system and an action.");
-    }
-
-    /**
-     * Appends a message to the terminal text area with a timestamp.
-     * This method is thread-safe for calls from other threads if needed.
+     * Builds the TUI window and wires up its controls.
      *
-     * @param message The message to log.
+     * @param gui the Lanterna text GUI the window will be attached to.
      */
-    private void logToTerminal(String message) {
-        SwingUtilities.invokeLater(() -> {
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-            terminalTextArea.append("[" + timestamp + "] " + message + "\n");
+    public Main(WindowBasedTextGUI gui) {
+        this.gui = gui;
+        gui.setTheme(darkTheme());
 
-            // Automatically scroll to the bottom
-            terminalTextArea.setCaretPosition(terminalTextArea.getDocument().getLength());
+        this.window = new BasicWindow("  Advent of Code — Solver  ");
+        this.window.setHints(List.of(Window.Hint.EXPANDED));
+        this.window.setCloseWindowWithEscape(true);
+
+        // Year selector (2015 .. 2025).
+        this.yearBox = new ComboBox<>();
+        for (int year = 2015; year <= 2025; year++) {
+            this.yearBox.addItem(String.valueOf(year));
+        }
+
+        // Day selector (1 .. 25).
+        this.dayBox = new ComboBox<>();
+        for (int day = 1; day <= 25; day++) {
+            this.dayBox.addItem(String.valueOf(day));
+        }
+
+        // Read-only, scrollable output area acting as our "terminal".
+        this.output = new TextBox(new TerminalSize(80, 20), TextBox.Style.MULTI_LINE);
+        this.output.setReadOnly(true);
+
+        Panel controls = new Panel(new LinearLayout(Direction.HORIZONTAL).setSpacing(2));
+        controls.addComponent(new Label("Year"));
+        controls.addComponent(this.yearBox);
+        controls.addComponent(new Label("Day"));
+        controls.addComponent(this.dayBox);
+        controls.addComponent(new Button(" Solve ", this::onSolve));
+        controls.addComponent(new Button(" Clear ", this::onClear));
+        controls.addComponent(new Button(" Quit ", this.window::close));
+
+        Component borderedOutput = this.output.withBorder(Borders.singleLine("Terminal"));
+        borderedOutput.setLayoutData(
+                LinearLayout.createLayoutData(LinearLayout.Alignment.Fill, LinearLayout.GrowPolicy.CanGrow));
+
+        Label help = new Label("Tab: move   ←→/↑↓: change   Enter: activate   Esc: quit");
+        help.setForegroundColor(OVERLAY0);
+
+        Panel root = new Panel(new LinearLayout(Direction.VERTICAL).setSpacing(1));
+        root.addComponent(controls);
+        root.addComponent(borderedOutput);
+        root.addComponent(help);
+
+        this.window.setComponent(root);
+    }
+
+    /**
+     * A soft dark (Catppuccin Mocha) theme so the UI reads like a modern editor
+     * instead of Lanterna's default blue.
+     */
+    private static Theme darkTheme() {
+        return SimpleTheme.makeTheme(
+                true,     // active selections rendered in bold
+                TEXT,     // base foreground
+                BASE,     // base background
+                TEXT,     // foreground for editable content (combo/textbox)
+                SURFACE0, // background for editable content
+                CRUST,    // foreground when focused/selected (dark text …)
+                BLUE,     // background when focused/selected (… on a blue highlight)
+                MANTLE);  // the desktop area behind the window
+    }
+
+    /**
+     * Displays the window and blocks until the user quits it.
+     */
+    public void run() {
+        log("Application started. Select a year and a day, then press Solve.");
+        gui.addWindowAndWait(window);
+    }
+
+    /**
+     * Solve handler: runs the selected puzzle on a background thread so slow puzzles
+     * (e.g. 2015 day 4 MD5 mining) don't freeze the UI. Output is marshalled back onto
+     * the GUI thread by {@link #log(String)}.
+     */
+    private void onSolve() {
+        String year = yearBox.getSelectedItem();
+        String day = dayBox.getSelectedItem();
+        log("Solving year " + year + ", day " + day + " ...");
+
+        Thread worker = new Thread(() -> {
+            SolutionFactory solution = new SolutionFactory(year, day, this::log);
+            solution.solve();
+        }, "aoc-solver");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    /**
+     * Clear handler: empties the terminal output box.
+     */
+    private void onClear() {
+        output.setText("");
+        log("Terminal cleared. Select a year and a day, then press Solve.");
+    }
+
+    /**
+     * Appends a timestamped message to the output box. Safe to call from any thread:
+     * the update is scheduled on the GUI thread, and the box auto-scrolls to the bottom.
+     *
+     * @param message the message to display.
+     */
+    private void log(String message) {
+        gui.getGUIThread().invokeLater(() -> {
+            output.addLine("[" + LocalDateTime.now().format(TIME_FORMAT) + "] " + message);
+            output.setCaretPosition(output.getLineCount() - 1, 0);
         });
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(Main::new);
+    public static void main(String[] args) throws IOException {
+        Screen screen = new DefaultTerminalFactory().createScreen();
+        screen.startScreen();
+        try {
+            WindowBasedTextGUI gui = new MultiWindowTextGUI(
+                    screen, new DefaultWindowManager(), new EmptySpace(MANTLE));
+            new Main(gui).run();
+        } finally {
+            screen.stopScreen();
+        }
     }
-
 }

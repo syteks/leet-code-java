@@ -10,12 +10,22 @@
     <packaging>jar</packaging>
 
     <name>Advent of Code - Java</name>
-    <description>Learning Java by solving Advent of Code puzzles with a Java Swing UI</description>
+    <description>Learning Java by solving Advent of Code puzzles with a Lanterna terminal UI</description>
 
     <properties>
-        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.release>26</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <lanterna.version>3.1.2</lanterna.version>
     </properties>
+
+    <dependencies>
+        <!-- Terminal (TUI) toolkit used to build the interactive solver interface -->
+        <dependency>
+            <groupId>com.googlecode.lanterna</groupId>
+            <artifactId>lanterna</artifactId>
+            <version>${lanterna.version}</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <!-- Source files live directly under src/ rather than src/main/java -->
@@ -25,24 +35,24 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
+                <version>3.14.0</version>
             </plugin>
 
-            <!-- mvn exec:java  — runs the Swing UI -->
+            <!-- mvn exec:java  — runs the Lanterna terminal UI -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.5.0</version>
                 <configuration>
                     <mainClass>Main</mainClass>
                 </configuration>
             </plugin>
 
-            <!-- mvn package  — produces a runnable JAR -->
+            <!-- mvn package  — produces a plain JAR with the correct main class -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.4.1</version>
+                <version>3.4.2</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -50,6 +60,29 @@
                         </manifest>
                     </archive>
                 </configuration>
+            </plugin>
+
+            <!-- mvn package  — also builds a self-contained fat JAR bundling Lanterna -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>Main</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
